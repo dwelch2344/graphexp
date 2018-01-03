@@ -1,7 +1,9 @@
 
 // configuration for the graph database access
 const HOST = "localhost"
-const PORT = "8182"
+// const PORT = "8182"
+const PORT = "8230"
+
 // The communication protocol with the server can be "REST" or "websocket"
 const COMMUNICATION_PROTOCOL = "REST";
 //const COMMUNICATION_PROTOCOL = "websocket";
@@ -9,8 +11,8 @@ const COMMUNICATION_PROTOCOL = "REST";
 
 // The communication method can be GraphSON 1.0 (used by Gremlin 3.2)
 // or GraphSON 3.0 (used by Gremlin 3.3)
-const COMMUNICATION_METHOD = "GraphSON1"
-//const COMMUNICATION_METHOD = "GraphSON3"
+// const COMMUNICATION_METHOD = "GraphSON1"
+const COMMUNICATION_METHOD = "GraphSON3"
 
 // Graph configuration
 const default_nb_of_layers = 3;

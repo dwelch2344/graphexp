@@ -31,15 +31,27 @@ var graphioGremlin = (function(){
 	}
 
 	function get_graph_info(){
-		var gremlin_query_nodes = "nodes = g.V().groupCount().by(label);"
-		var gremlin_query_edges = "edges = g.E().groupCount().by(label);"
-		var gremlin_query_nodes_prop = "nodesprop = g.V().valueMap().select(keys).groupCount();"
-		var gremlin_query_edges_prop = "edgesprop = g.E().valueMap().select(keys).groupCount();"
+		// var gremlin_query_nodes = "nodes = g.V().groupCount().by(label);"
+		// var gremlin_query_edges = "edges = g.E().groupCount().by(label);"
+		// var gremlin_query_nodes_prop = "nodesprop = g.V().valueMap().select(keys).groupCount();"
+		// var gremlin_query_edges_prop = "edgesprop = g.E().valueMap().select(keys).groupCount();"
 		
-		var gremlin_query = gremlin_query_nodes+gremlin_query_nodes_prop
-			+gremlin_query_edges+gremlin_query_edges_prop
-			+ "[nodes.toList(),nodesprop.toList(),edges.toList(),edgesprop.toList()]"
-		// while busy, show we're doing something in the messageArea.
+		// var gremlin_query = gremlin_query_nodes+gremlin_query_nodes_prop
+		// 	+gremlin_query_edges+gremlin_query_edges_prop
+    // 	+ "[nodes.toList(),nodesprop.toList(),edges.toList(),edgesprop.toList()]"
+    
+    // while busy, show we're doing something in the messageArea.
+    
+    var gremlin_query = `            
+      g.inject(0).map{
+        [
+            g.V().groupCount().by(label).toList(),
+            g.E().groupCount().by(label).toList(),
+            g.V().valueMap().select(keys).groupCount(),
+            g.E().valueMap().select(keys).groupCount()
+        ]
+      }.next()
+    `
 		$('#messageArea').html('<h3>(loading)</h3>');
 		var message = "<p> Graph info</p>"
 		send_to_server(gremlin_query,'graphInfo',null,message)
@@ -54,7 +66,7 @@ var graphioGremlin = (function(){
 		//console.log(input_field)
 	 	var filtered_string = input_string;//You may add .replace(/\W+/g, ''); to refuse any character not in the alphabet
 	 	if (filtered_string.length>50) filtered_string = filtered_string.substring(0,50); // limit string length
-		// Translate to Gremlin query
+    // Translate to Gremlin query    
 	  	if (input_string==""){
 	  		var gremlin_query_nodes = "nodes = g.V().limit("+node_limit_per_request+")"
 	  		var gremlin_query_edges = "edges = g.V().limit("+node_limit_per_request+").aggregate('node').outE().as('edge').inV().where(within('node')).select('edge')"
@@ -73,7 +85,16 @@ var graphioGremlin = (function(){
 	  			+".aggregate('node').outE().as('edge').inV().where(within('node')).select('edge')"
 	  		var gremlin_query = gremlin_query_nodes+"\n"+gremlin_query_edges+"\n"+"[nodes.toList(),edges.toList()]"
 	  		console.log(gremlin_query)
-		}
+    }
+    
+    gremlin_query = `
+      g.inject(0).map{
+          [
+              g.V().limit(50).as('nodes').toList(),
+              g.V().limit(50).aggregate('node').outE().as('edge').inV().where(within('node')).select('edge').toList()
+          ]
+      }.next()
+    `
 
 	  	// while busy, show we're doing something in the messageArea.
 	  	$('#messageArea').html('<h3>(loading)</h3>');
@@ -90,9 +111,21 @@ var graphioGremlin = (function(){
 		// Gremlin query
 		//var gremlin_query = "g.V("+d.id+").bothE().bothV().path()"
 		// 'inject' is necessary in case of an isolated node ('both' would lead to an empty answer)
-		var gremlin_query_nodes = "nodes = g.V("+d.id+").as('node').both().as('node').select(all,'node').inject(g.V("+d.id+")).unfold()"
-	  	var gremlin_query_edges = "edges = g.V("+d.id+").bothE()"
-	  	var gremlin_query = gremlin_query_nodes+"\n"+gremlin_query_edges+"\n"+"[nodes.toList(),edges.toList()]"
+		// var gremlin_query_nodes = "nodes = g.V("+d.id+").as('node').both().as('node').select(all,'node').inject(g.V("+d.id+")).unfold()"
+	  // 	var gremlin_query_edges = "edges = g.V("+d.id+").bothE()"
+    // 	var gremlin_query = gremlin_query_nodes+"\n"+gremlin_query_edges+"\n"+"[nodes.toList(),edges.toList()]"
+    
+
+    var gremlin_query = `    
+      g.inject(0).map{
+        [
+            g.V("${d.id}").as('node').both().as('node').select(all,'node').inject(g.V("${d.id}")).unfold().toList(),
+            g.V("${d.id}").bothE().toList()
+        ]
+      }.next()
+    `
+
+
 		// while busy, show we're doing something in the messageArea.
 		$('#messageArea').html('<h3>(loading)</h3>');
 		var message = "<p>Query ID: "+ d.id +"</p>"
